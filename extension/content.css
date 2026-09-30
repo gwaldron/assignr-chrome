@@ -1,0 +1,109 @@
+/* Only confirmed staffed, non-cancelled games receive a green background. */
+a.calendar-game.ffx-staffed-game:not(.cancelled-game) {
+  background-color: #176438;
+  color: #fff !important;
+  border-radius: 3px;
+}
+
+a.calendar-game.ffx-staffed-game:not(.cancelled-game) .fc-event-title,
+a.calendar-game.ffx-staffed-game:not(.cancelled-game) .fc-event-time {
+  color: #fff !important;
+}
+
+a.calendar-game > .ffx-umpire-count {
+  display: inline-block;
+  flex: 0 0 auto;
+  margin-inline: 0.25em;
+  padding: 0.05em 0.4em;
+  border-radius: 3px;
+  background: #edf0f2;
+  color: #28333a;
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+a.calendar-game.ffx-staffed-game > .ffx-umpire-count {
+  background: #e7f5eb;
+  color: #17452a;
+}
+
+.ffx-staffing-refresh {
+  margin: 0.25em;
+  padding: 0.35em 0.65em;
+  border: 1px solid #a7b8ac;
+  border-radius: 4px;
+  background: #f7faf8;
+  color: #17452a;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ffx-staffing-refresh:disabled { opacity: 0.65; cursor: default; }
+.ffx-staffing-refresh:focus-visible { outline: 2px solid #176438; outline-offset: 2px; }
+
+/* Keep the existing date link on the right, with the count on the left. */
+.fc .fc-daygrid-day-top.ffx-day-summary {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.fc .ffx-day-summary > .ffx-unstaffed-count {
+  order: -1;
+  margin-inline-end: auto;
+  padding: 4px;
+  color: #333;
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Expanded days use the original event rows in normal flow. Overrides of
+   inline layout styles apply only while this day is open. */
+.fc .fc-scrollgrid-sync-table.ffx-expanded-weeks {
+  height: auto !important;
+  width: 100% !important;
+}
+/* FullCalendar caches pixel widths before the vertical scrollbar appears.
+   Fit the expanded grid inside the scroller's available content width so the
+   scrollbar cannot cover Saturday's links or count badges. */
+.fc .fc-daygrid-body:has(.ffx-expanded-weeks) { width: 100% !important; }
+.fc .ffx-week-sized { height: var(--ffx-week-height, auto) !important; }
+
+.fc .ffx-day-expanded .fc-daygrid-day-events {
+  /* Balanced month grids absolutely position this whole container. It must
+     participate in table layout for its week to grow and move later weeks. */
+  position: relative !important;
+  inset: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.fc .ffx-day-expanded .fc-daygrid-event-harness {
+  position: relative !important;
+  visibility: visible !important;
+  inset: auto !important;
+  margin-top: 0 !important;
+}
+
+.fc .ffx-day-expanded .fc-daygrid-day-bottom { margin-top: 0 !important; }
+.fc .ffx-day-expanded .fc-daygrid-more-link { display: none !important; }
+
+.fc .ffx-show-less {
+  display: block;
+  margin: 2px;
+  padding: 2px 4px;
+  border: 0;
+  background: transparent;
+  color: #17452a;
+  font: inherit;
+  font-size: 0.85em;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.fc .ffx-show-less:focus-visible { outline: 2px solid #176438; outline-offset: 1px; }

@@ -1,0 +1,13 @@
+# Keep credentials and private inspection captures out of version control.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.har
+local-inspection/
+
+# Generated extension packages and dependencies, if added later.
+*.crx
+*.zip
+node_modules/

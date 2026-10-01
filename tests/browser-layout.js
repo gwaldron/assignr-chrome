@@ -43,6 +43,11 @@
         badge.textContent = index % 2 ? "1" : "2";
         if (index % 2 === 0) game.classList.add("ffx-staffed-game");
         game.append(badge);
+        const request = document.createElement("span");
+        request.className = "ffx-pending-request";
+        request.textContent = "R";
+        request.title = "Pending umpire requests";
+        game.append(request);
         harness.append(game);
         events.append(harness);
       }
@@ -61,43 +66,48 @@
     }
   }
   const snapshot = () => FairfaxStaffing.calendarSnapshot(document, "/welcome");
-  const overflow = FairfaxInlineOverflow.createInlineOverflow(document, action => action(), snapshot);
+  const overflow = FairfaxInlineOverflow.createInlineOverflow(document);
   overflow.render(snapshot());
   const frame = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   document.querySelector("#run-tests").addEventListener("click", async () => {
     const output = document.querySelector("#results");
     output.textContent = "Running…";
-    document.querySelectorAll(".ffx-show-less").forEach(button => button.click());
+    overflow.render(null);
     await frame();
     const rows = [...weeks.rows];
     const first = rows[1].cells[1];
-    const second = rows[1].cells[4];
     const heights = rows.map(row => row.getBoundingClientRect().height);
     const relativeTop = row => row.getBoundingClientRect().top - weeks.getBoundingClientRect().top;
     const originalNextTop = relativeTop(rows[2]);
     const checks = [];
     const check = (label, value) => checks.push(`${value ? "PASS" : "FAIL"}: ${label}`);
-    first.querySelector(".fc-daygrid-more-link").click();
+    overflow.render(snapshot());
     await frame();
     check("busy week grows", rows[1].getBoundingClientRect().height > heights[1] + 100);
     check("following week moves down", relativeTop(rows[2]) > originalNextTop + 100);
     check("other weeks retain their height", rows.every((row, index) => index === 1 || row.getBoundingClientRect().height >= heights[index] - 1));
-    check("games and collapse control fit inside the cell", first.querySelector(".ffx-show-less").getBoundingClientRect().bottom <= first.getBoundingClientRect().bottom + 1);
+    check("all games fit inside their cells", [...weeks.querySelectorAll("a.calendar-game")].every(game =>
+      game.getBoundingClientRect().bottom <= game.closest("td").getBoundingClientRect().bottom + 1));
     check("all cells in the week share the grown height", [...rows[1].cells].every(day => Math.abs(day.getBoundingClientRect().height - first.getBoundingClientRect().height) < 1));
     check("calendar scroll area includes expanded content", document.querySelector(".fc-scroller").scrollHeight > 570);
     const scroller = document.querySelector(".fc-scroller");
     const visibleRight = scroller.getBoundingClientRect().left + scroller.clientWidth;
     check("Saturday cell fits before the scrollbar", rows[1].cells[6].getBoundingClientRect().right <= visibleRight + 1);
-    check("Saturday count badges fit before the scrollbar", [...rows[1].cells[6].querySelectorAll(".ffx-umpire-count")]
+    check("Saturday count and R badges fit before the scrollbar", [...rows[1].cells[6].querySelectorAll(".ffx-umpire-count, .ffx-pending-request")]
       .every(badge => badge.getBoundingClientRect().right <= visibleRight + 1));
-    second.querySelector(".fc-daygrid-more-link").click();
-    first.querySelector(".ffx-show-less").click();
+    check("more links are hidden and there are no collapse controls", [...weeks.querySelectorAll(".fc-daygrid-more-link")]
+      .every(link => getComputedStyle(link).display === "none") && !weeks.querySelector(".ffx-show-less"));
+    check("all originally hidden games are visible without clicks", [...weeks.querySelectorAll(".fc-daygrid-event-harness-abs")]
+      .every(harness => getComputedStyle(harness).visibility === "visible" && harness.getBoundingClientRect().height > 0));
+    const expandedHeights = rows.map(row => row.getBoundingClientRect().height);
+    overflow.render(snapshot());
     await frame();
-    check("week still fits another expanded day", second.querySelector(".ffx-show-less").getBoundingClientRect().bottom <= second.getBoundingClientRect().bottom + 1);
-    second.querySelector(".ffx-show-less").click();
+    check("rerender preserves expanded week heights", rows.every((row, index) => Math.abs(row.getBoundingClientRect().height - expandedHeights[index]) < 1));
+    overflow.render(null);
     await frame();
-    check("collapse restores original week heights", rows.every((row, index) => Math.abs(row.getBoundingClientRect().height - heights[index]) < 1));
-    check("collapse restores following week position", Math.abs(relativeTop(rows[2]) - originalNextTop) < 1);
+    check("leaving month view restores original week heights", rows.every((row, index) => Math.abs(row.getBoundingClientRect().height - heights[index]) < 1));
+    check("leaving month view restores following week position", Math.abs(relativeTop(rows[2]) - originalNextTop) < 1);
     output.textContent = checks.join("\n");
+    overflow.render(snapshot());
   });
 })();

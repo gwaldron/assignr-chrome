@@ -581,3 +581,67 @@ game times, timezones, and requests are unchanged.
 Manifest/syntax validation and all **31 existing automated tests** pass. The
 installed extension was not reloaded; reload it and the calendar to apply this
 display change.
+
+## Version 0.9.0: pending-request R badge (October 1, 2026)
+
+Read-only inspection of the authenticated Pending Requests list found seven
+games, each with at least one assignment-position icon carrying both `fa-hand`
+and `fa-color-success`. The first page of the ordinary displayed-range games
+list contained 40 cards, including one of these requested games with the same
+marker. A game detail page confirmed that the marker can accompany an occupied
+or unassigned slot. `fa-circle-question` appeared separately for unconfirmed
+assignments and is not treated as a request. Only rendered DOM was inspected;
+private response bodies were not saved or added to fixtures.
+
+The existing bounded, paginated staffing reader now also extracts this marker.
+The calendar displays a single amber R with the tooltip and accessible label
+"Pending umpire requests", after any numeric assignment badge or by itself.
+Request status is independent of staffing classification, so the game's existing
+background, count, and staffing rule remain unchanged. Cancelled games and
+unavailable request data have no R. One positively identified slot is sufficient,
+even if another slot cannot be interpreted. Indicators share the existing refresh,
+expiry, navigation, and failure handling. No endpoints, requests, permissions,
+storage, or profile reads were added.
+
+Manifest/file/syntax validation and all **34 automated tests** pass. The three
+new tests cover status evidence versus unconfirmed assignments, misleading or
+malformed markup, paginated shared reads, zero assignments, unknown staffing,
+cancelled games, normal link behavior, deduplication, badge ordering, refresh,
+expiry, navigation, and failures without polling. All **eleven browser layout
+checks** pass with both count and R badges, including Saturday's scrollbar edge.
+Fixtures contain only synthetic data.
+
+The existing installed extension was reloaded in native Chrome, followed by the
+authenticated October homepage calendar. All seven requested games displayed R:
+one beside a count of two on a green game, one beside a count of one on a default
+game, and five by themselves on games with zero assigned umpires. Saturday's
+three visible R badges fit inside their cells. This confirms live response
+compatibility for the inspected calendar. Expansion geometry was checked in the
+synthetic browser fixture; live month navigation and live expanded-week geometry
+were not retested for this release. No assignments, settings, or notifications
+were changed, and no new extension was installed.
+
+## Version 0.10.0: automatically show every calendar game
+
+All game-bearing days in the recognized homepage month calendar now expand on
+render. There is no click or remembered open/closed state: replacement cells,
+new game rows, and new months expand automatically. The original links and rows
+remain in place, and no additional requests are made. The + more controls are
+hidden; Show less controls and click/keyboard interception have been removed.
+Whole weeks still grow to fit their games, retaining the scrollbar width fix.
+Expansion remains available if staffing reads fail, and leaving month view or
+pagehide restores the original layout styles.
+
+Manifest/file/syntax validation and all **34 automated tests** pass. Updated
+expansion coverage checks automatic visibility classes, unchanged links and
+focus, no extra reads, replacement cells, new months, page lifecycle cleanup,
+unavailable staffing, and restoration of existing row styles. All **13 synthetic
+browser layout checks** pass, verifying that every originally hidden row is
+visible, whole weeks grow without overlap, rerenders are stable, and count/R
+badges fit before Saturday's scrollbar.
+
+A native Chrome reload was attempted, but computer use detected the user's
+input before the extension was reloaded. Browser interaction stopped at that
+point. This release therefore still needs the installed extension and live
+calendar reloaded; live automatic expansion was not verified during this turn.
+No games, assignments, settings, or notifications were changed.

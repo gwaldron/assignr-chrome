@@ -85,6 +85,28 @@
     return { staffed, assignedCount: officials.size };
   }
 
+  function pendingRequestStatus(card) {
+    const containers = card.querySelectorAll('[data-assign-target~="assignments"]');
+    if (containers.length !== 1) return null;
+    const slots = [...containers[0].querySelectorAll(".assignment")];
+    if (!slots.length || slots.length > 20) return null;
+    let known = true;
+    let pending = false;
+    for (const slot of slots) {
+      const positions = slot.querySelectorAll(".position");
+      if (positions.length !== 1) { known = false; continue; }
+      const icons = positions[0].querySelectorAll(":scope > i");
+      if (icons.length !== 1) { known = false; continue; }
+      const classes = icons[0].classList;
+      // Observed on Assignr's Pending Requests list and the ordinary games
+      // list. A question mark means an unconfirmed assignment, not a request.
+      if (classes.contains("fa-hand") && classes.contains("fa-color-success")) pending = true;
+      else if (!["fa-check", "fa-circle-question", "fa-circle-dashed"].some(name => classes.contains(name))) known = false;
+    }
+    // One positive marker is enough, even if another slot is unreadable.
+    return pending ? true : known ? false : null;
+  }
+
   function filterDate(isoDate) {
     if (dateValue(isoDate) === null) throw new Error("Invalid calendar date");
     const [year, month, day] = isoDate.split("-").map(Number);
@@ -119,7 +141,7 @@
       if (!/^[1-9]\d*$/.test(id ?? "") || id !== card.getAttribute("data-assign-game-value") || games.has(id)) {
         throw new Error("Ambiguous game identity");
       }
-      games.set(id, staffingStatus(card));
+      games.set(id, { ...staffingStatus(card), hasPendingRequests: pendingRequestStatus(card) });
     }
     let nextPage = null;
     for (const link of fragment.querySelectorAll("a[href]")) {

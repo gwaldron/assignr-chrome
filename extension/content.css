@@ -10,7 +10,8 @@ a.calendar-game.ffx-staffed-game:not(.cancelled-game) .fc-event-time {
   color: #fff !important;
 }
 
-a.calendar-game > .ffx-umpire-count {
+a.calendar-game > .ffx-umpire-count,
+a.calendar-game > .ffx-pending-request {
   display: inline-block;
   flex: 0 0 auto;
   margin-inline: 0.25em;
@@ -27,6 +28,12 @@ a.calendar-game > .ffx-umpire-count {
 a.calendar-game.ffx-staffed-game > .ffx-umpire-count {
   background: #e7f5eb;
   color: #17452a;
+}
+
+/* Pending requests are independent of whether the game is staffed. */
+a.calendar-game > .ffx-pending-request {
+  background: #f9cc65;
+  color: #593c00;
 }
 
 .ffx-staffing-refresh {
@@ -61,8 +68,7 @@ a.calendar-game.ffx-staffed-game > .ffx-umpire-count {
   white-space: nowrap;
 }
 
-/* Expanded days use the original event rows in normal flow. Overrides of
-   inline layout styles apply only while this day is open. */
+/* Show every month's game row in normal flow, growing its entire week. */
 .fc .fc-scrollgrid-sync-table.ffx-expanded-weeks {
   height: auto !important;
   width: 100% !important;
@@ -92,18 +98,3 @@ a.calendar-game.ffx-staffed-game > .ffx-umpire-count {
 
 .fc .ffx-day-expanded .fc-daygrid-day-bottom { margin-top: 0 !important; }
 .fc .ffx-day-expanded .fc-daygrid-more-link { display: none !important; }
-
-.fc .ffx-show-less {
-  display: block;
-  margin: 2px;
-  padding: 2px 4px;
-  border: 0;
-  background: transparent;
-  color: #17452a;
-  font: inherit;
-  font-size: 0.85em;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.fc .ffx-show-less:focus-visible { outline: 2px solid #176438; outline-offset: 1px; }

@@ -6,6 +6,7 @@
   globalThis.fairfaxStaffingStarted = true;
 
   const BADGE = "ffx-umpire-count";
+  const REQUEST_BADGE = "ffx-pending-request";
   const MARK = "ffx-staffed-game";
   const DAY_COUNT = "ffx-unstaffed-count";
   const DAY_HEADER = "ffx-day-summary";
@@ -13,7 +14,7 @@
   const FRESH_MS = 5 * 60 * 1000;
   const COOLDOWN_MS = 5000;
   const readRange = staffing.createReader(document, fetch.bind(globalThis));
-  const overflow = globalThis.FairfaxInlineOverflow.createInlineOverflow(document, editDOM);
+  const overflow = globalThis.FairfaxInlineOverflow.createInlineOverflow(document);
   let current = null;
   let attemptedKey = null;
   let results = null;
@@ -43,7 +44,7 @@
   }
 
   function clearIndicators() {
-    for (const badge of document.querySelectorAll(`.${BADGE}`)) badge.remove();
+    for (const badge of document.querySelectorAll(`.${BADGE}, .${REQUEST_BADGE}`)) badge.remove();
     for (const link of document.querySelectorAll(`.${MARK}`)) link.classList.remove(MARK);
     clearDayCounts();
   }
@@ -144,7 +145,7 @@
       for (const link of document.querySelectorAll(`.${MARK}`)) {
         if (!activeLinks.has(link)) link.classList.remove(MARK);
       }
-      for (const badge of document.querySelectorAll(`.${BADGE}`)) {
+      for (const badge of document.querySelectorAll(`.${BADGE}, .${REQUEST_BADGE}`)) {
         if (!activeLinks.has(badge.closest("a.calendar-game"))) badge.remove();
       }
       for (const link of activeLinks) {
@@ -165,6 +166,18 @@
           badge.title = `${count} umpire${details.assignedCount === 1 ? "" : "s"} assigned` +
             (staffed ? "; meets staffing criteria" : "");
           if (!badges.length) link.append(badge);
+        }
+        const requests = [...link.querySelectorAll(`.${REQUEST_BADGE}`)];
+        if (cancelled || details?.hasPendingRequests !== true) requests.forEach(badge => badge.remove());
+        else {
+          requests.slice(1).forEach(badge => badge.remove());
+          const badge = requests[0] ?? document.createElement("span");
+          badge.className = REQUEST_BADGE;
+          if (badge.textContent !== "R") badge.textContent = "R";
+          badge.title = "Pending umpire requests";
+          badge.setAttribute("aria-label", "Pending umpire requests");
+          // Keep R after the count, including when a count is added later.
+          if (link.lastChild !== badge) link.append(badge);
         }
       }
       renderDayCounts(snapshot);

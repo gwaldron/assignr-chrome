@@ -645,3 +645,45 @@ input before the extension was reloaded. Browser interaction stopped at that
 point. This release therefore still needs the installed extension and live
 calendar reloaded; live automatic expansion was not verified during this turn.
 No games, assignments, settings, or notifications were changed.
+
+## Version 0.11.0: Day and List colors and badges (October 2, 2026)
+
+Read-only inspection of the authenticated homepage found that the Day button
+selects `fc-resourceTimelineDay-view`. Its hourly timeline headers carry local
+ISO timestamps in `data-date`, and game bars are `a.calendar-game` links with
+an `.fc-event-main` title. The empty October 2 view and four games on October 1
+were inspected. Venue/sub-venue labels occupy a separate resource column.
+
+List selects `fc-listWeek-view`. Its games are `tr.calendar-game.fc-list-event`
+rows with time, dot, and title cells; the game URL is the title cell's child
+anchor. Cancelled state is on the row. Date headings have ISO `data-date` values,
+and days with no games are omitted. The inspected September 27–October 3 list
+had five date headings and 32 game rows. "Assign Games..." appears in a separate
+`game-date` row and is excluded from game indicators. No raw private page data
+was saved as a fixture, and no assignment controls were used.
+
+Calendar discovery now recognizes these two layouts, validates their DOM dates,
+and supplies each game element separately from its destination link. Day reads
+one local date; List reads only the first through last displayed date, bounded
+to seven days. It does not parse localized toolbar text or convert local dates
+through the machine timezone. Empty views do not trigger reads. Ambiguous view
+markup, malformed dates, and unsupported Week view are left alone.
+
+All three supported views reuse the same staffing/request parser, pagination,
+request limits, refresh, expiry, and failure handling. Day badges stay inside
+the timeline bar; List paints staffed rows dark green with white text and puts
+badges inside the existing game link. Unstaffed and cancelled games keep their
+native background behavior. Native Day/List labels and times are preserved;
+Month's daily totals and expansion stay scoped to Month. Switching views clears
+old indicators and cancels obsolete reads. No new permission, endpoint, profile
+request, credential, storage, or notification behavior was added.
+
+Manifest/file/syntax validation and all **39 automated tests** pass, including
+five new Day/List tests. All **13 Month browser geometry checks** and **13 new
+Day/List browser rendering checks** pass in Chromium. The latter runs the actual
+content scripts and stylesheet with synthetic markup, mocked responses, and
+test-only origin/path adapters. Visual inspection confirmed readable List rows
+and compact Day badges. Native Chrome activation timed out before a reload,
+so live extension rendering in Day/List still needs verification after reloading
+the extension and homepage. The authenticated site layouts themselves were
+inspected through the in-app browser.

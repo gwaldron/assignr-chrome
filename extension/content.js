@@ -102,7 +102,7 @@
 
   function renderDayCounts(snapshot) {
     const counts = new Map();
-    if (snapshot && results) {
+    if (snapshot?.view === "month" && results) {
       for (const day of snapshot.root.querySelectorAll(".fc-daygrid-day[data-date]")) {
         const header = day.querySelector(".fc-daygrid-day-top");
         if (!header) continue;
@@ -140,21 +140,23 @@
 
   function render(snapshot) {
     editDOM(() => {
-      const activeLinks = new Set(snapshot?.root.querySelectorAll("a.calendar-game[href]") ?? []);
+      const entries = snapshot?.entries ?? [];
+      const activeLinks = new Set(entries.map(entry => entry.link));
+      const activeElements = new Set(entries.map(entry => entry.element));
       renderGameLabels(activeLinks);
-      for (const link of document.querySelectorAll(`.${MARK}`)) {
-        if (!activeLinks.has(link)) link.classList.remove(MARK);
+      for (const element of document.querySelectorAll(`.${MARK}`)) {
+        if (!activeElements.has(element)) element.classList.remove(MARK);
       }
       for (const badge of document.querySelectorAll(`.${BADGE}, .${REQUEST_BADGE}`)) {
-        if (!activeLinks.has(badge.closest("a.calendar-game"))) badge.remove();
+        if (!activeLinks.has(badge.closest("a"))) badge.remove();
       }
-      for (const link of activeLinks) {
+      for (const { element, link } of entries) {
         const id = staffing.idFromLink(link.getAttribute("href"), "games");
         const details = results?.get(id);
-        const cancelled = link.classList.contains("cancelled-game");
+        const cancelled = element.classList.contains("cancelled-game");
         const staffed = !cancelled && details?.staffed === true;
         const showCount = !cancelled && Number.isInteger(details?.assignedCount) && details.assignedCount > 0;
-        link.classList.toggle(MARK, staffed);
+        element.classList.toggle(MARK, staffed);
         const badges = [...link.querySelectorAll(`.${BADGE}`)];
         if (!showCount) badges.forEach(badge => badge.remove());
         else {
@@ -181,7 +183,7 @@
         }
       }
       renderDayCounts(snapshot);
-      overflow.render(snapshot);
+      overflow.render(snapshot?.view === "month" ? snapshot : null);
       if (!snapshot) {
         refreshButton?.remove();
         refreshButton = null;

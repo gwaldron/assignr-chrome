@@ -5,8 +5,11 @@ import { readFile } from "node:fs/promises";
 const files = new Map([
   ["/", "tests/browser-layout.html"],
   ["/tests/browser-layout.js", "tests/browser-layout.js"],
+  ["/views", "tests/browser-views.html"],
+  ["/tests/browser-views.js", "tests/browser-views.js"],
   ["/extension/staffing.js", "extension/staffing.js"],
   ["/extension/overflow.js", "extension/overflow.js"],
+  ["/extension/content.js", "extension/content.js"],
   ["/extension/content.css", "extension/content.css"],
 ]);
 const server = createServer(async (request, response) => {

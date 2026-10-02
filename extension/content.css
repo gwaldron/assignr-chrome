@@ -6,12 +6,15 @@ a.calendar-game.ffx-staffed-game:not(.cancelled-game) {
 }
 
 a.calendar-game.ffx-staffed-game:not(.cancelled-game) .fc-event-title,
-a.calendar-game.ffx-staffed-game:not(.cancelled-game) .fc-event-time {
+a.calendar-game.ffx-staffed-game:not(.cancelled-game) .fc-event-time,
+a.calendar-game.ffx-staffed-game:not(.cancelled-game) .fc-event-main {
   color: #fff !important;
 }
 
 a.calendar-game > .ffx-umpire-count,
-a.calendar-game > .ffx-pending-request {
+a.calendar-game > .ffx-pending-request,
+.fc-list-event.calendar-game .fc-list-event-title > a > .ffx-umpire-count,
+.fc-list-event.calendar-game .fc-list-event-title > a > .ffx-pending-request {
   display: inline-block;
   flex: 0 0 auto;
   margin-inline: 0.25em;
@@ -25,15 +28,39 @@ a.calendar-game > .ffx-pending-request {
   white-space: nowrap;
 }
 
-a.calendar-game.ffx-staffed-game > .ffx-umpire-count {
+a.calendar-game.ffx-staffed-game > .ffx-umpire-count,
+.fc-list-event.ffx-staffed-game .fc-list-event-title > a > .ffx-umpire-count {
   background: #e7f5eb;
   color: #17452a;
 }
 
 /* Pending requests are independent of whether the game is staffed. */
-a.calendar-game > .ffx-pending-request {
+a.calendar-game > .ffx-pending-request,
+.fc-list-event.calendar-game .fc-list-event-title > a > .ffx-pending-request {
   background: #f9cc65;
   color: #593c00;
+}
+
+/* List view paints each table cell, including on hover. Keep the entire
+   staffed row green, with readable text and the original link intact. */
+.fc .fc-list-event.ffx-staffed-game:not(.cancelled-game) > td,
+.fc .fc-list-event.ffx-staffed-game:not(.cancelled-game) .fc-list-event-title > a {
+  background-color: #176438;
+  color: #fff;
+}
+
+.fc-list-event.calendar-game .fc-list-event-title > a:has(.ffx-umpire-count, .ffx-pending-request) {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Timeline titles may shrink; the numeric and request badges may not. */
+.fc-resourceTimelineDay-view a.calendar-game { align-items: center; }
+.fc-resourceTimelineDay-view a.calendar-game > .fc-event-main {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ffx-staffing-refresh {

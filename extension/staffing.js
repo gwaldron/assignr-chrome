@@ -32,15 +32,43 @@
     const roots = document.querySelectorAll('[data-controller~="calendar-main"] [data-calendar-main-target~="calendar"].fc');
     if (roots.length !== 1) return null;
     const root = roots[0];
-    // A contiguous grid of 28–42 dates distinguishes the inspected month view.
-    const dates = [...new Set([...root.querySelectorAll("[data-date]")]
-      .map(node => node.getAttribute("data-date")).filter(date => dateValue(date) !== null))].sort();
-    if (dates.length < 28 || dates.length > 42 || dates.length % 7 !== 0) return null;
-    if (dateValue(dates.at(-1)) - dateValue(dates[0]) !== (dates.length - 1) * DAY) return null;
-    const ids = [...new Set([...root.querySelectorAll("a.calendar-game[href]")]
-      .map(link => idFromLink(link.getAttribute("href"), "games")).filter(Boolean))].sort();
+    const views = root.querySelectorAll(".fc-view");
+    if (views.length > 1) return null;
+    const surface = views[0] ?? root;
+    let view = "month";
+    let dates;
+    if (surface.classList.contains("fc-resourceTimelineDay-view")) {
+      view = "day";
+      // Timeline headers have local ISO timestamps. Read their date portion
+      // directly: UTC conversion could move a game to a neighboring day.
+      const stamps = [...surface.querySelectorAll(".fc-timeline-slot-label[data-date]")]
+        .map(node => node.getAttribute("data-date"));
+      if (!stamps.length || stamps.some(stamp => !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/.test(stamp))) return null;
+      dates = [...new Set(stamps.map(stamp => stamp.slice(0, 10)))];
+      if (dates.length !== 1 || dateValue(dates[0]) === null) return null;
+    } else if (surface.classList.contains("fc-listWeek-view")) {
+      view = "list";
+      dates = [...new Set([...surface.querySelectorAll("tr.fc-list-day[data-date]")]
+        .map(node => node.getAttribute("data-date")))].sort();
+      // Empty days have no list heading. Bound reads to the first/last date
+      // actually shown, without interpreting localized toolbar text.
+      if (!dates.length || dates.some(date => dateValue(date) === null) ||
+          dateValue(dates.at(-1)) - dateValue(dates[0]) > 6 * DAY) return null;
+    } else {
+      if (views.length && !surface.classList.contains("fc-dayGridMonth-view")) return null;
+      // A contiguous grid of 28–42 dates distinguishes the inspected month view.
+      dates = [...new Set([...surface.querySelectorAll("[data-date]")]
+        .map(node => node.getAttribute("data-date")).filter(date => dateValue(date) !== null))].sort();
+      if (dates.length < 28 || dates.length > 42 || dates.length % 7 !== 0) return null;
+      if (dateValue(dates.at(-1)) - dateValue(dates[0]) !== (dates.length - 1) * DAY) return null;
+    }
+    const entries = view === "list" ? [...surface.querySelectorAll("tr.calendar-game.fc-list-event")].flatMap(element => {
+      const links = element.querySelectorAll(".fc-list-event-title > a[href]");
+      return links.length === 1 ? [{ element, link: links[0] }] : [];
+    }) : [...surface.querySelectorAll("a.calendar-game[href]")].map(link => ({ element: link, link }));
+    const ids = [...new Set(entries.map(({ link }) => idFromLink(link.getAttribute("href"), "games")).filter(Boolean))].sort();
     const range = { start: dates[0], end: dates.at(-1) };
-    return { root, range, ids, key: `${range.start}/${range.end}/${ids.join(",")}` };
+    return { root, view, entries, range, ids, key: `${view}/${range.start}/${range.end}/${ids.join(",")}` };
   }
 
   // staffed: true = qualifies, false = does not, null = unreadable/unsupported.

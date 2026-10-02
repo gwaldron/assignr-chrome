@@ -1,9 +1,10 @@
 # Fairfax Assignr Staffed Games
 
-A Chrome Manifest V3 extension for the logged-in month calendar at
+A Chrome Manifest V3 extension for the logged-in homepage calendar at
 [fairfaxll.assignr.com](https://fairfaxll.assignr.com).
 
-**Version 0.10.0:** all month-calendar games stay expanded automatically.
+**Version 0.11.0:** staffing colors, umpire counts, and request badges now work
+in the **Month**, **Day**, and **List** views. Month games stay expanded automatically.
 Qualifying games get a dark green background, white game text,
 and a badge showing the **number of assigned umpires**. Unstaffed games with at
 least one assigned umpire also get a count badge, while retaining their existing
@@ -17,7 +18,7 @@ an assigned umpire awaiting confirmation does not by itself trigger R. Cancelled
 games and games with unavailable request data have no R badge. The status comes
 from the same game-list reads used for staffing, with no extra requests.
 
-Game labels read **Time Age / Venue / Sub-venue / Gender**, keeping the final
+Month game labels read **Time Age / Venue / Sub-venue / Gender**, keeping the final
 field exactly as supplied by Assignr (currently Baseball or Softball). For example,
 `6:30p Example Park / Field 2 (AA/AAA) / AA / Baseball` becomes
 `6:30p AA / Example Park / Field 2 (AA/AAA) / Baseball`.
@@ -27,7 +28,7 @@ Games without a sub-venue omit that part. Cancellation prefixes, game links,
 and count badges are preserved. Formatting uses the existing title text and adds
 no requests. Unrecognized labels or nested title markup are left unchanged.
 
-Each day with games that do not meet the staffing rule shows **Unstaffed: X**
+In Month view, each day with games that do not meet the staffing rule shows **Unstaffed: X**
 at the top left, with the existing date link on the right. The count includes
 games hidden behind `+ more`, counts each game once, and excludes cancelled games.
 It uses the same fetched data as the green badges, with no extra requests.
@@ -68,8 +69,12 @@ vacant Field slots do not disqualify a game that meets the rule. There are no
 red/yellow staffing warnings or unknown-data badges. Default appearance makes no claim
 about whether a game is staffed. Cancelled games retain their default styling.
 
-The first version supports the five age-group labels above and the homepage
-month view. Unknown labels, other views, malformed assignment markup, and
+The extension supports the five age-group labels above in the homepage's
+Month, Day timeline, and weekly List views. Day bars use the same green background
+and badges; List applies the background to the full game row and places badges
+after the game title link's text. These views retain their native labels and times.
+Daily unstaffed summaries and automatic expansion apply to Month only.
+Unknown labels, Week view, malformed assignment markup, and
 ambiguous Plate configurations stay unchanged. In particular, the inspected
 list cannot reliably distinguish an empty slot from one hidden by policy, so
 multiple configured Plate slots are left unchanged even when only one visible
@@ -82,9 +87,9 @@ No build or dependency installation is needed to load the extension.
 1. Open Chrome's Extensions page (`chrome://extensions`).
 2. Turn on **Developer mode**.
 3. Choose **Load unpacked** and select `D:\devel\assignr-chrome\extension`.
-4. Confirm **Fairfax Assignr Staffed Games**, version **0.10.0**, appears without errors.
+4. Confirm **Fairfax Assignr Staffed Games**, version **0.11.0**, appears without errors.
 5. If you already loaded the earlier scaffold, click its **Reload** button instead.
-6. Refresh your signed-in Assignr homepage and use the **month** calendar.
+6. Refresh your signed-in Assignr homepage and select **month**, **day**, or **list**.
 
 After a brief read, games with known positive assignment counts should show a
 numeric badge; only qualifying games should turn green. A **Refresh staffing**
@@ -92,7 +97,7 @@ button appears beside the calendar controls. Use it after changing assignments
 elsewhere. Returning to the tab refreshes data if the last read is over 30 seconds
 old. Indicators expire after five minutes; use the button to read again. There
 is no background polling. Reads are spaced at least five seconds apart, so a
-rapid refresh or month change may take a few seconds to begin.
+rapid refresh or view/date change may take a few seconds to begin.
 
 After editing extension files, click **Reload** on its extension card, then
 reload the Assignr tab. Disable/remove the extension and reload Assignr to unload
@@ -127,9 +132,14 @@ explains loading and reloading unpacked extensions.
     it should show **R**, including when it has zero assigned umpires. A question
     mark for an unconfirmed assignment alone should not trigger R. Check that
     both badges fit in Saturday's column when busy days expand automatically.
+11. Switch between **day**, **list**, and **month** on a populated date. The same
+    games should have matching staffing colors, counts, and R badges. Verify
+    List's green rows have readable text, Day's badges fit inside the timeline
+    bars, and game/date links still work. Navigate to another day/week and check
+    that stale indicators clear. An empty view should make no staffing reads.
 
 If nothing turns green, first confirm the extension is enabled, the homepage is
-in month view, and your session is signed in. A failed read clears the labels and
+in Month, Day, or List view, and your session is signed in. A failed read clears the labels and
 pauses further reads until page reload. The refresh button is then disabled and
 its tooltip explains that data is unavailable. The console emits one generic
 `Fairfax staffing` warning without names, tokens, or response contents.
@@ -157,8 +167,10 @@ tests/
   calendar.test.mjs    DOM updates, links, cancellation, refresh, and failures
   daily-counts.test.mjs Daily aggregation, hidden/duplicate games, and date links
   requests.test.mjs     Request evidence, R badges, shared reads, and lifecycle
+  views.test.mjs        Day/List date bounds, rules, view switching, and cleanup
   overflow.test.mjs    Automatic expansion, rerenders, lifecycle, and preserved links
   browser-layout.*     Real-browser week geometry checks with synthetic games
+  browser-views.*      Real-browser Day/List rendering with mocked responses
 docs/
   inspection.md        Live read-only evidence and known limitations
 ```
@@ -180,12 +192,12 @@ node --test tests/*.test.mjs
 The pinned jsdom dependency is for development only. Nothing from `node_modules`
 is loaded by the extension. Tests use mocked network responses and synthetic
 people/games; they do not access Assignr, execute remote scripts, or install the
-extension. Thirty-four tests pass. They cover rules, numeric badges on staffed and
+extension. Thirty-nine tests pass. They cover rules, numeric badges on staffed and
 unstaffed games, zero/unavailable counts, distinct IDs, malformed and
 hostile content, pagination, errors, request/byte limits, timeouts, stale results,
 rerenders, default/cancelled styling, links, daily counts, inline expansion, and
 duplicate prevention, pending-request markers, and R badge lifecycle without
-extra reads. They do not establish Chrome injection or live response
+extra reads, Day/List discovery, date bounds, and view switching. They do not establish Chrome injection or live response
 compatibility.
 
 To check layout in a real browser without installing the extension:
@@ -202,13 +214,21 @@ and restored layout when leaving month view. These passed in the in-app Chromium
 The fixture recreates the absolute-positioned balanced grid observed on Assignr
 and uses the actual expansion script and stylesheet. It uses synthetic games and
 no Assignr requests. Stop the server with Ctrl+C. Reload the installed extension
-and calendar to apply version 0.10.0. See the [inspection findings](docs/inspection.md)
+and calendar to apply version 0.11.0. See the [inspection findings](docs/inspection.md)
 for the scope of synthetic and previous live checks.
+
+For Day/List rendering, open `/views` on the same printed localhost address and
+click **Run view checks**. All thirteen checks should pass, covering the count/R
+badges, dark green staffed games, white text, default unstaffed/cancelled colors,
+and badge containment. This fixture runs the actual content scripts with mocked
+responses and test-only origin/path adapters; it never contacts Assignr.
 
 ## Requests and privacy
 
-The calendar feature reads the existing `/games` HTML list for the displayed month,
-including adjacent-month grid dates. Pagination is sequential and limited to
+The calendar feature reads the existing `/games` HTML list for the displayed
+dates: the full Month grid, the single Day, or the first through last date shown
+in the weekly List (at most seven days). List omits empty-date headings, so its
+read range may be shorter than a full week. Pagination is sequential and limited to
 eight pages per lookup, 60 requests per document lifetime, 2 MiB per page,
 8 MiB per lookup, and 20 seconds per lookup. An incomplete response or missing
 calendar game invalidates the lookup; partial results are not displayed.

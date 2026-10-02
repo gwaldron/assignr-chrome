@@ -42,6 +42,27 @@ export function response(url, html = list(), status = 200, headers = {}) {
   return result;
 }
 
+// Simplified versions of the two additional layouts inspected on /welcome.
+export function dayCalendar(ids = ["101"], date = "2026-10-06") {
+  return `<main data-controller="calendar-main"><div class="fc" data-calendar-main-target="calendar">
+    <div class="fc-header-toolbar"><h2>Example day</h2></div>
+    <div class="fc-resourceTimelineDay-view fc-view"><table><tr>
+      <th class="fc-timeline-slot-label" data-date="${date}T00:00:00">12am</th>
+      <th class="fc-timeline-slot-label" data-date="${date}T18:00:00">6pm</th>
+    </tr></table>${ids.map(id => `<div class="fc-timeline-event-harness"><a class="calendar-game fc-timeline-event" href="/games/${id}"><div class="fc-event-main">AA / Baseball</div></a></div>`).join("")}</div>
+  </div></main>`;
+}
+
+export function listCalendar(groups = [["2026-10-06", ["101"]]]) {
+  return `<main data-controller="calendar-main"><div class="fc" data-calendar-main-target="calendar">
+    <div class="fc-header-toolbar"><h2>Example week</h2></div>
+    <div class="fc-listWeek-view fc-view fc-list"><table class="fc-list-table"><tbody>${groups.map(([date, ids]) => `
+      <tr class="fc-list-day" data-date="${date}"><th colspan="3"><a class="fc-list-day-text" tabindex="0">${date}</a></th></tr>
+      <tr class="game-date fc-list-event"><td colspan="3"><a href="/games?filter[start_date]=${date}">Assign Games...</a></td></tr>
+      ${ids.map(id => `<tr class="calendar-game fc-list-event"><td class="fc-list-event-time">6:00pm</td><td class="fc-list-event-graphic"><span class="fc-list-event-dot"></span></td><td class="fc-list-event-title"><a href="/games/${id}">Example Park / Field 1 / AA / Baseball</a></td></tr>`).join("")}`).join("")}</tbody></table></div>
+  </div></main>`;
+}
+
 export function setup(t, { html = calendar(), fetchPage = async url => response(url), path = "/welcome" } = {}) {
   const dom = new JSDOM(html, { url: ORIGIN + path, runScripts: "outside-only", pretendToBeVisual: true });
   t.after(() => dom.window.close());

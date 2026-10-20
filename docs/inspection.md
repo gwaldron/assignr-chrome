@@ -1,7 +1,7 @@
 # Phase 1 inspection and recommendation
 
-Current release: **0.8.1** retains the calendar features and removes the pay-scale
-experiment. The versioned sections below are historical inspection records;
+Current release: **0.12.0** includes calendar indicators and single-day games
+navigation. The versioned sections below are historical inspection records;
 the 0.7.x pay-scale behavior is no longer included in the extension.
 
 Inspected September 30, 2026 (America/New_York). Requirements revised the same
@@ -687,3 +687,40 @@ and compact Day badges. Native Chrome activation timed out before a reload,
 so live extension rendering in Day/List still needs verification after reloading
 the extension and homepage. The authenticated site layouts themselves were
 inspected through the in-app browser.
+
+## Version 0.12.0 — single-day games navigation (October 20, 2026)
+
+Inspected the authenticated `/games` page with equal October 20 start/end dates
+through the in-app browser. The results live in `#games`, with
+`#page_entries_info` immediately above them. The native filter form posts to
+`/games/session_filter`. Its date fields are `session_search[start_date]` and
+`session_search[end_date]`; the Apply Filter submit button supplies
+`filter_action=apply`. Other buttons on the form clear or recall filters and
+must not be used for day navigation.
+
+An initial attempt to translate every native filter control into a `filter[...]`
+GET query returned Assignr's System Error page. That approach was discarded.
+Using the visible native date inputs and Apply Filter successfully changed the
+applied range to October 21. The original October 20 range was then restored.
+These checks changed only the displayed/session filter; no game, assignment,
+notification, saved filter, or account setting was edited. No private captures
+were saved to the repository.
+
+The extension now places two buttons above the results for a valid single-day
+range. It captures the loaded form's date, computes adjacent calendar days in
+UTC (avoiding daylight-saving shifts), changes only the two date fields, and
+calls `requestSubmit` with the existing Apply Filter button. Other native
+filter selections, including any current edits, are submitted unchanged.
+Assignr handles its normal filtering and navigation. There is no automatic
+fetch or translated query, and no hidden field/token is read or copied by the
+extension. Form origin, action, method, date controls, and submitter are checked
+again on click. Unsupported or ambiguous markup gets no controls. Rerenders
+reuse the controls, and replacement forms get fresh date snapshots.
+
+Manifest/file/syntax validation and all **44 automated tests** pass. The five
+new tests cover native form/submitter selection, preservation of other fields,
+leap years and year boundaries, daylight-saving dates, session-only dates,
+empty synthetic results, invalid/multi-day ranges, focus, deduplication,
+replacement pages, and changed form targets. The native live filter flow was
+verified; the installed extension has not been reloaded or visually checked
+for these new buttons. Reload version 0.12.0 and refresh `/games` for that check.

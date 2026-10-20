@@ -1,9 +1,17 @@
 # Fairfax Assignr Staffed Games
 
-A Chrome Manifest V3 extension for the logged-in homepage calendar at
+A Chrome Manifest V3 extension for the logged-in calendar and games page at
 [fairfaxll.assignr.com](https://fairfaxll.assignr.com).
 
-**Version 0.11.0:** staffing colors, umpire counts, and request badges now work
+**Version 0.12.0:** adds **<< Prev day** and **Next day >>** buttons above the
+`/games` results when the applied start and end dates are the same. Each button
+moves both dates by one calendar day and uses Assignr's existing **Apply Filter**
+action, retaining the other filter selections. The controls also appear on empty
+single-day results. They are hidden for multi-day or unreadable date ranges.
+If you have edited other controls in the expanded filter form, those edits are
+applied too, just as with Apply Filter. No requests happen until you click.
+
+Staffing colors, umpire counts, and request badges work
 in the **Month**, **Day**, and **List** views. Month games stay expanded automatically.
 Qualifying games get a dark green background, white game text,
 and a badge showing the **number of assigned umpires**. Unstaffed games with at
@@ -87,7 +95,7 @@ No build or dependency installation is needed to load the extension.
 1. Open Chrome's Extensions page (`chrome://extensions`).
 2. Turn on **Developer mode**.
 3. Choose **Load unpacked** and select `D:\devel\assignr-chrome\extension`.
-4. Confirm **Fairfax Assignr Staffed Games**, version **0.11.0**, appears without errors.
+4. Confirm **Fairfax Assignr Staffed Games**, version **0.12.0**, appears without errors.
 5. If you already loaded the earlier scaffold, click its **Reload** button instead.
 6. Refresh your signed-in Assignr homepage and select **month**, **day**, or **list**.
 
@@ -137,6 +145,10 @@ explains loading and reloading unpacked extensions.
     List's green rows have readable text, Day's badges fit inside the timeline
     bars, and game/date links still work. Navigate to another day/week and check
     that stale indicators clear. An empty view should make no staffing reads.
+12. Open `/games` filtered to one day. Click **Next day >>**, then **<< Prev day**.
+    Confirm both date fields and the results move together, and any venue or
+    age-group filters remain selected. Try an empty day and a month boundary.
+    A multi-day range should have no day-navigation buttons.
 
 If nothing turns green, first confirm the extension is enabled, the homepage is
 in Month, Day, or List view, and your session is signed in. A failed read clears the labels and
@@ -157,6 +169,7 @@ extension/
   staffing.js          Calendar discovery, assignment parser, bounded reader
   overflow.js          Automatic day expansion and week sizing
   content.js           Dynamic calendar reconciliation and refresh lifecycle
+  game-days.js         Single-day games navigation using the native filter form
   content.css          Count and request badges, green games, expanded week layout
 scripts/
   validate.mjs         Dependency-free manifest/file/syntax checks
@@ -168,6 +181,7 @@ tests/
   daily-counts.test.mjs Daily aggregation, hidden/duplicate games, and date links
   requests.test.mjs     Request evidence, R badges, shared reads, and lifecycle
   views.test.mjs        Day/List date bounds, rules, view switching, and cleanup
+  game-days.test.mjs    Native filter submission, date arithmetic, and page lifecycle
   overflow.test.mjs    Automatic expansion, rerenders, lifecycle, and preserved links
   browser-layout.*     Real-browser week geometry checks with synthetic games
   browser-views.*      Real-browser Day/List rendering with mocked responses
@@ -192,12 +206,14 @@ node --test tests/*.test.mjs
 The pinned jsdom dependency is for development only. Nothing from `node_modules`
 is loaded by the extension. Tests use mocked network responses and synthetic
 people/games; they do not access Assignr, execute remote scripts, or install the
-extension. Thirty-nine tests pass. They cover rules, numeric badges on staffed and
+extension. Forty-four tests pass. They cover rules, numeric badges on staffed and
 unstaffed games, zero/unavailable counts, distinct IDs, malformed and
 hostile content, pagination, errors, request/byte limits, timeouts, stale results,
 rerenders, default/cancelled styling, links, daily counts, inline expansion, and
 duplicate prevention, pending-request markers, and R badge lifecycle without
-extra reads, Day/List discovery, date bounds, and view switching. They do not establish Chrome injection or live response
+extra reads, Day/List discovery, date bounds, view switching, and games day
+navigation (filter preservation, leap years, daylight-saving dates, empty results,
+and safe form targeting). They do not establish Chrome injection or live response
 compatibility.
 
 To check layout in a real browser without installing the extension:
@@ -214,7 +230,7 @@ and restored layout when leaving month view. These passed in the in-app Chromium
 The fixture recreates the absolute-positioned balanced grid observed on Assignr
 and uses the actual expansion script and stylesheet. It uses synthetic games and
 no Assignr requests. Stop the server with Ctrl+C. Reload the installed extension
-and calendar to apply version 0.11.0. See the [inspection findings](docs/inspection.md)
+and Assignr page to apply version 0.12.0. See the [inspection findings](docs/inspection.md)
 for the scope of synthetic and previous live checks.
 
 For Day/List rendering, open `/views` on the same printed localhost address and
@@ -236,8 +252,12 @@ Reload the page to reset failed reads or the document request budget.
 
 The manifest matches only `https://fairfaxll.assignr.com/*`. Content scripts run
 in an isolated world. Calendar changes are limited to the identified homepage calendar.
-Only same-origin GETs to the calendar's game-list data are made, using the existing
-session. Redirects are rejected. The extension does not fetch umpire profiles.
+Calendar data reads use same-origin GETs with the existing session and reject
+redirects. On `/games`, clicking a day button changes only the native filter's
+date fields and submits its existing **Apply Filter** action to
+`/games/session_filter` (POST). Assignr handles the session filter and subsequent
+navigation. The extension does not read or copy hidden credentials, build a
+separate request, or submit assignment forms. It does not fetch umpire profiles.
 There is no worker, extension API permission, storage, telemetry, API token,
 remote code, or third-party data transfer. Results stay in memory. Returned HTML
 is parsed in a detached template and never inserted into the page; visible label

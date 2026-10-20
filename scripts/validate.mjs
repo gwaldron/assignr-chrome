@@ -34,7 +34,7 @@ assert.deepEqual(contentScript.matches, ["https://fairfaxll.assignr.com/*"]);
 assert.equal(contentScript.all_frames, false);
 assert.equal(contentScript.run_at, "document_idle");
 assert.equal(contentScript.world, "ISOLATED");
-assert.deepEqual(contentScript.js, ["staffing.js", "overflow.js", "content.js"]);
+assert.deepEqual(contentScript.js, ["staffing.js", "overflow.js", "content.js", "game-days.js"]);
 assert.deepEqual(contentScript.css, ["content.css"]);
 assert.ok((await readFile(new URL("content.css", extensionRoot), "utf8")).trim());
 

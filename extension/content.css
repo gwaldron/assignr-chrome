@@ -1,3 +1,25 @@
+/* Same-origin day navigation above the filtered games list. */
+.ffx-game-day-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.ffx-game-day-navigation > button {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #a7b8ac;
+  border-radius: 4px;
+  background: #f7faf8;
+  color: #17452a;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ffx-game-day-navigation > button:hover { background: #e7f5eb; }
+.ffx-game-day-navigation > button:focus-visible { outline: 2px solid #176438; outline-offset: 2px; }
+
 /* Only confirmed staffed, non-cancelled games receive a green background. */
 a.calendar-game.ffx-staffed-game:not(.cancelled-game) {
   background-color: #176438;

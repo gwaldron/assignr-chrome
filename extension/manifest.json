@@ -1,12 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Fairfax Assignr Staffed Games",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Highlights Fairfax Little League calendar games that meet the Plate and age-group umpire staffing rules.",
   "content_scripts": [
     {
       "matches": ["https://fairfaxll.assignr.com/*"],
-      "js": ["staffing.js", "overflow.js", "content.js"],
+      "js": ["staffing.js", "overflow.js", "content.js", "game-days.js"],
       "css": ["content.css"],
       "run_at": "document_idle",
       "all_frames": false,
